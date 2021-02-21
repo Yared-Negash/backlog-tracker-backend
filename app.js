@@ -6,14 +6,14 @@ const cors = require('cors');
 const https = require('https');
 const app = express();
 
-const origin = process.env.origin || 'http://localhost:3001'
+const origin = process.env.ORIGIN || 'http://localhost:3001'
 console.log(`origin: ${origin}`);
 app.use(cors({
     origin: origin
 }));
 
 
-const port = process.env.port || 3000;
+const port = process.env.PORT || 3000;
 const baseOMDBLink = "https://www.omdbapi.com/?apikey=" + process.env.OMDB_KEY;
 
 console.log(baseOMDBLink);
