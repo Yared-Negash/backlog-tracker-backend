@@ -61,6 +61,13 @@ app.get('/findLog', (req, res) => {
 
     request.end();
 });
+app.post("/login",bodyParser.json(), (req, res) => {
+    const emailAddress = req.body.emailAddress
+    const userPassword = req.body.userPassword
+    console.log(JSON.stringify(req.body));
+    console.log(`email ${emailAddress} and password ${userPassword}`);
+    res.send("sending back from midware");
+});
 app.listen(port, () => {
     if(origin.includes("localhost"))
         console.log(`Lumberjacks are awaiting your orders at http://localhost:${port}`)
