@@ -87,6 +87,29 @@ app.post("/register", (req, res) => {
     userPassword.save
     res.send("sending back from midware");
 });
+app.post("/login", (req, res) => {
+    const emailAddress = req.body.emailAddress
+    const userPassword = req.body.userPassword
+    const dateAdded = Date.now();
+    console.log(JSON.stringify(req.body));
+    console.log(`LOGGIN IN: email ${emailAddress} and password ${userPassword}`);
+    User.findOne({ emailAddress: emailAddress},(err,foundUser) =>{
+        if(err){
+            console.log('ERROR HAPPEND: '+err);
+            res.send(`Error occured while finding login credentials for ${emailAddress}`);
+        }
+        else{
+            if(foundUser){
+                let message = "";
+                if(foundUser.userPassword == userPassword)
+                    message = `Found ${emailAddress}`;
+                else
+                    message = `Could not find ${emailAddress}`;
+                res.send(message);
+            }
+        }
+    })
+});
 app.listen(port, () => {
     if (origin.includes("localhost"))
         console.log(`Lumberjacks are awaiting your orders at http://localhost:${port}`)
