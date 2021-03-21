@@ -2,14 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const md5 = require('md5');
+const bcrypt = require('bcrypt');
+const saltRounds = parseInt(process.env.SALT_ROUNDS); //converts string .env to int
 const cors = require('cors');
 const https = require('https');
 const app = express();
 const origin = process.env.ORIGIN || 'http://localhost:3001'
 const port = process.env.PORT || 3000;
 const baseOMDBLink = "https://www.omdbapi.com/?apikey=" + process.env.OMDB_KEY;
-const secret = process.env.SECRET;
 
 //app setup with cors to get requets from front end and various req.body inits
 app.use(cors({ origin: origin }));
@@ -73,36 +73,49 @@ app.get('/findLog', (req, res) => {
 });
 app.post("/register", (req, res) => {
     const emailAddress = req.body.emailAddress
-    const userPassword = md5(req.body.userPassword);
+    const userPassword = req.body.userPassword;
     const dateAdded = Date.now();
-    console.log(JSON.stringify(req.body));
-    console.log(`email ${emailAddress} and password ${userPassword}`);
-    const newUser = new User({ emailAddress: emailAddress, userPassword: userPassword, dateAdded: dateAdded });
-    newUser.save()
-        .then(() => {
-            console.log(`${emailAddress} was saved into the db`);
-        })
-    userPassword.save
-    res.send("sending back from midware");
+    console.log(`Creating account for ${emailAddress}`);
+    bcrypt.hash(userPassword, saltRounds, function (err, hash) {
+        // Store hash in your password DB.
+        const newUser = new User({ emailAddress: emailAddress, userPassword: hash, dateAdded: dateAdded });
+        newUser.save()
+            .then(() => {
+                console.log(`${emailAddress} was saved into the db`);
+                res.send(`${emailAddress} was successfully registered into the db`);
+            })
+            .catch((err) => {
+                console.log(`Error registering ${emailAddress} into the db: ${err}`);
+                res.send(`Error registering ${emailAddress} into the db: ${err}`);
+            })
+    });
 });
 app.post("/login", (req, res) => {
     const emailAddress = req.body.emailAddress
-    const userPassword = md5(req.body.userPassword);
+    const userPassword = req.body.userPassword;
     const dateAdded = Date.now();
-    console.log(JSON.stringify(req.body));
-    console.log(`LOGGIN IN: email ${emailAddress} and password ${userPassword}`);
-    User.findOne({ emailAddress: emailAddress},(err,foundUser) =>{
-        if(err){
-            console.log('ERROR HAPPEND: '+err);
+    console.log(`Logging in ${emailAddress}`);
+    User.findOne({ emailAddress: emailAddress }, (err, foundUser) => {
+        if (err) {
+            console.log('ERROR HAPPEND: ' + err);
             res.send(`Error occured while finding login credentials for ${emailAddress}`);
         }
-        else{
-            if(foundUser){
-                let message = "";
-                if(foundUser.userPassword == userPassword)
-                    message = `Found ${emailAddress}`;
-                else
-                    message = `Could not find ${emailAddress}`;
+        else {
+            let message = "";
+            if (foundUser) {
+                bcrypt.compare(userPassword,foundUser.userPassword, function (err, result) {
+                    // result == true
+                    if (result)
+                        message = `Found ${emailAddress}`;
+                    else
+                        message = `Incorrect password for ${emailAddress}`;
+                    console.log(message);
+                    res.send(message);
+                });
+            }
+            else{
+                message = `Could not find ${emailAddress} in the system`;
+                console.log(`Could not find ${emailAddress} in the system`);
                 res.send(message);
             }
         }
