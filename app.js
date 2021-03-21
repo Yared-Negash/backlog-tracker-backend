@@ -73,7 +73,7 @@ app.get('/findLog', (req, res) => {
 
     request.end();
 });
-app.post("/login", (req, res) => {
+app.post("/register", (req, res) => {
     const emailAddress = req.body.emailAddress
     const userPassword = req.body.userPassword
     const dateAdded = Date.now();
