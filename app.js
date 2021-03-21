@@ -2,15 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const encrypt = require('mongoose-encryption');
 const cors = require('cors');
 const https = require('https');
 const app = express();
 const origin = process.env.ORIGIN || 'http://localhost:3001'
 const port = process.env.PORT || 3000;
 const baseOMDBLink = "https://www.omdbapi.com/?apikey=" + process.env.OMDB_KEY;
+const secret = process.env.SECRET;
 
 //app setup with cors to get requets from front end and various req.body inits
-app.use(cors({origin: origin}));
+app.use(cors({ origin: origin }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -19,7 +21,14 @@ console.log(`OMDB URL: ${baseOMDBLink}`);
 
 //mongoDB connection with USER schema
 mongoose.connect('mongodb://localhost:27017/userDB', { useNewUrlParser: true, useUnifiedTopology: true });
-const userSchema = {emailAddress: String, userPassword: String, dateAdded: Date }
+const userSchema = new mongoose.Schema({
+    emailAddress: String,
+    userPassword: String,
+    dateAdded: Date
+});
+
+//uses secret from .env to encrypt password
+userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["userPassword"] });
 const User = mongoose.model('User', userSchema);
 
 //home page
@@ -44,7 +53,7 @@ app.get('/findLog', (req, res) => {
         response.on('end', () => {
             const logJSON = JSON.parse(body);
             const logArray = logJSON.Search;
-            if(!logArray){
+            if (!logArray) {
                 console.log(`${logTitle} was not found`);
                 res.send([]);
                 return;
@@ -52,7 +61,7 @@ app.get('/findLog', (req, res) => {
             let updatedLogArray = [];
             console.log(logJSON);
 
-            logArray.map(element =>{
+            logArray.map(element => {
                 updatedLogArray.push({ logTitle: element.Title, logPlot: "test", logReleaseDate: element.Year, logPoster: element.Poster });
             })
             res.send(updatedLogArray);
@@ -70,7 +79,7 @@ app.post("/login", (req, res) => {
     const dateAdded = Date.now();
     console.log(JSON.stringify(req.body));
     console.log(`email ${emailAddress} and password ${userPassword}`);
-    const newUser = new User({ emailAddress: emailAddress, userPassword: userPassword,dateAdded:dateAdded });
+    const newUser = new User({ emailAddress: emailAddress, userPassword: userPassword, dateAdded: dateAdded });
     newUser.save()
         .then(() => {
             console.log(`${emailAddress} was saved into the db`);
@@ -79,7 +88,7 @@ app.post("/login", (req, res) => {
     res.send("sending back from midware");
 });
 app.listen(port, () => {
-    if(origin.includes("localhost"))
+    if (origin.includes("localhost"))
         console.log(`Lumberjacks are awaiting your orders at http://localhost:${port}`)
     else
         console.log(`Lumberjacks are awaiting your order on port ${port} (prod)`);
