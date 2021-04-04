@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
     dateAdded: Date
 });
 userSchema.plugin(passportLocalMongoose);
-const User = mongoose.model('User', userSchema);
+const User = new mongoose.model('User', userSchema);
 
 passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
@@ -104,27 +104,19 @@ app.post("/register", (req, res) => {
     const userPassword = req.body.userPassword;
     const dateAdded = Date.now();
     console.log(`Creating account for ${emailAddress}`);
-    User.register({ username: emailAddress, dateAdded: dateAdded }, userPassword, (err, user) => {
+    User.register({ username: emailAddress, dateAdded: dateAdded }, userPassword, function (err, user) {
+        console.log(`inside register`)
         if (err) {
             console.log(`Error registering ${emailAddress} into the db: ${err}`);
             res.send(`Error registering ${emailAddress} into the db: ${err}`);
         }
-        else {
-            passport.authenticate('local'),null,
-                function (req, res) {
-                    // If this function gets called, authentication was successful.
-                    // `req.user` contains the authenticated user.
-                    console.log(`inside`);
-                    if (req.isAuthenticated()) {
-                        console.log(`user is authenticated`);
-                        res.send(` successfully registered into the db`);
-                    }
-                    else {
-                        console.log("user not found, redirecting to login");
-                        res.redirect("/Login")
-                    }
-                }
-        }
+        console.log(`after err`)
+
+        passport.authenticate('local', function (err, user, info) {
+            console.log("user generated.");
+            res.send(`heea`);
+        })(req, res);
+
     });
 });
 app.post("/login", (req, res) => {
