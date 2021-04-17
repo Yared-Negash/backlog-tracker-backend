@@ -110,13 +110,10 @@ app.post("/register", (req, res) => {
             console.log(`Error registering ${emailAddress} into the db: ${err}`);
             res.send(`Error registering ${emailAddress} into the db: ${err}`);
         }
-        console.log(`after err`)
-
-        passport.authenticate('local', function (err, user, info) {
-            console.log("user generated.");
-            res.send(`heea`);
-        })(req, res);
-
+        else {
+            console.log(`after err`)
+            res.send(`${emailAddress} was successfully created`);
+        }
     });
 });
 app.post("/login", (req, res) => {
