@@ -1,12 +1,18 @@
 require('dotenv').config();
 const express = require('express');
-const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const cors = require('cors');
-const https = require('https');
 const session = require('express-session');
 const passport = require('passport');
+const cors = require('cors');
+const crypto = require('crypto');
+const https = require('https');
 const passportLocalMongoose = require('passport-local-mongoose'); //note passport-local is already used as a dependecy for this
+const passwordUtils = require('./utility/passwordUtil');
+const genPassword = passwordUtils.genPassword;
+const MongoStore = require('connect-mongo');
+const connection = require('./config/database');
+
+
 
 const app = express();
 const origin = process.env.ORIGIN || 'http://localhost:3001'
@@ -15,20 +21,31 @@ const baseOMDBLink = "https://www.omdbapi.com/?apikey=" + process.env.OMDB_KEY;
 
 //app setup with cors to get requets from front end and various req.body inits
 app.use(cors({ origin: origin }));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
-console.log(`cors origin (Front-end): ${origin}`);
-console.log(`OMDB URL: ${baseOMDBLink}`);
+/* //this is the collection that holds all sessions
+const sessionStore = new MongoStore({
+    mongooseConnection: connection,
+    collection: 'sessions'
+}); */
 
+//configures session data
 app.use(session({
-    secret: "thisisatempstringshouldbeinenv",
+    secret: process.env.SECRET,
     resave: false,
-    saveUninitialized: false
-}));
+    saveUninitialized: true,
+    cookie:{
+        maxAge: 1000 * 60 *60 * 24
+    },
+    store: MongoStore.create({ mongoUrl: process.env.SESSION_STORE})
+}))
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+console.log(`cors origin (Front-end): ${origin}`);
+console.log(`OMDB URL: ${baseOMDBLink}`);
 
 //mongoDB connection with USER schema
 mongoose.connect('mongodb://localhost:27017/userDB', { useNewUrlParser: true, useUnifiedTopology: true });
@@ -104,7 +121,25 @@ app.post("/register", (req, res) => {
     const userPassword = req.body.userPassword;
     const dateAdded = Date.now();
     console.log(`Creating account for ${emailAddress}`);
-    User.register({ username: emailAddress, dateAdded: dateAdded }, userPassword, function (err, user) {
+
+    const saltHash = genPassword(userPassword);
+
+    const salt = saltHash.salt;
+    const hash = saltHash.hash;
+
+    const newUser = new User({
+        username: req.body.uname,
+        hash : hash,
+        salt : salt
+    });
+
+    //save new user into database with generated hash and salt
+    newUser.save()
+        .then((user) =>{
+            console.log(user);
+        })
+    res.redirect('/login');
+    /*     User.register({ username: emailAddress, dateAdded: dateAdded }, userPassword, function (err, user) {
         console.log(`inside register`)
         if (err) {
             console.log(`Error registering ${emailAddress} into the db: ${err}`);
@@ -114,7 +149,7 @@ app.post("/register", (req, res) => {
             console.log(`after err`)
             res.send(`${emailAddress} was successfully created`);
         }
-    });
+    }); */
 });
 app.post("/login", (req, res) => {
     const emailAddress = req.body.emailAddress;
