@@ -128,7 +128,7 @@ app.post("/register", (req, res) => {
     const hash = saltHash.hash;
 
     const newUser = new User({
-        username: req.body.uname,
+        username: emailAddress,
         hash : hash,
         salt : salt
     });
@@ -136,20 +136,12 @@ app.post("/register", (req, res) => {
     //save new user into database with generated hash and salt
     newUser.save()
         .then((user) =>{
-            console.log(user);
+            res.send({"registerStatus":true})
         })
-    res.redirect('/login');
-    /*     User.register({ username: emailAddress, dateAdded: dateAdded }, userPassword, function (err, user) {
-        console.log(`inside register`)
-        if (err) {
-            console.log(`Error registering ${emailAddress} into the db: ${err}`);
-            res.send(`Error registering ${emailAddress} into the db: ${err}`);
-        }
-        else {
-            console.log(`after err`)
-            res.send(`${emailAddress} was successfully created`);
-        }
-    }); */
+        .catch((err) =>{
+            console.log(`error occured ${err}`);
+            res.send({"registerStatus":false})
+        })
 });
 app.post("/login", (req, res) => {
     const emailAddress = req.body.emailAddress;
