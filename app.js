@@ -134,6 +134,12 @@ const sessionStore = new MongoStore({ mongooseConnection: connection, collection
 app.use(passport.initialize());
 app.use(passport.session()); 
 
+app.use((req,res,next) =>{
+    console.log(req.session);
+    console.log(req.user);
+    next();
+})
+
 
 //home page
 app.get('/', (req, res) => {
@@ -209,16 +215,16 @@ app.post("/register", (req, res) => {
 // Since we are using the passport.authenticate() method, we should be redirected no matter what 
 app.post('/login',
     passport.authenticate('local', {
-        successRedirect: '/success',
-        failureRedirect: '/failure'
+        successRedirect: '/loginSuccess',
+        failureRedirect: '/loginFailure'
     }));
 
-app.get("/success", (req, res) => {
-    res.send("login found");
+app.get("/loginSuccess", (req, res) => {
+    res.send({"loginStatus":true})
 })
-app.get("/failure", (req, res) => {
-    res.send("login failed");
-})
+app.get("/loginFailure", (req, res) => {
+    res.send({"loginStatus":false})
+});
 
 app.listen(port, () => {
     if (origin.includes("localhost"))
