@@ -18,7 +18,7 @@ const port = process.env.PORT || 3000;
 const baseOMDBLink = "https://www.omdbapi.com/?apikey=" + process.env.OMDB_KEY;
 
 //app setup with cors to get requets from front end and various req.body inits
-app.use(cors({ origin: origin }));
+app.use(cors({ origin: origin , credentials: true}));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
