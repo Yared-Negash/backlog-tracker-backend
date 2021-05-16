@@ -18,9 +18,9 @@ const port = process.env.PORT || 3000;
 const baseOMDBLink = "https://www.omdbapi.com/?apikey=" + process.env.OMDB_KEY;
 
 //app setup with cors to get requets from front end and various req.body inits
-app.use(cors({ origin: origin , credentials: true}));
+app.use(cors({ origin: origin, credentials: true }));
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 console.log(`cors origin (Front-end): ${origin}`);
 console.log(`OMDB URL: ${baseOMDBLink}`);
@@ -42,27 +42,27 @@ app.use(session({
  * DB_STRING=mongodb://<user>:<password>@localhost:27017/database_name
  */
 
- const conn = process.env.DB_STRING;
+const conn = process.env.DB_STRING;
 
- const connection = mongoose.createConnection(conn, {
-     useNewUrlParser: true,
-     useUnifiedTopology: true
- });
- 
- 
- connection.on('connecting', () => {
-     console.log('connected');
- });
- 
- // Creates simple schema for a User.  The hash and salt are derived from the user's given password when they register
- const UserSchema = new mongoose.Schema({
-     username: String,
-     hash: String,
-     salt: String
- });
- 
- 
- const User = connection.model('User', UserSchema);
+const connection = mongoose.createConnection(conn, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
+
+connection.on('connecting', () => {
+    console.log('connected');
+});
+
+// Creates simple schema for a User.  The hash and salt are derived from the user's given password when they register
+const UserSchema = new mongoose.Schema({
+    username: String,
+    hash: String,
+    salt: String
+});
+
+
+const User = connection.model('User', UserSchema);
 
 
 /**
@@ -72,7 +72,7 @@ app.use(session({
  * object.  The user object is then serialized with `passport.serializeUser()` and added to the 
  * `req.session.passport` object. 
  */
- passport.use(new LocalStrategy(
+passport.use(new LocalStrategy(
     { // or whatever you want to use
         usernameField: 'emailAddress',    // define the parameter in req.body that passport can use as username and password
         passwordField: 'userPassword'
@@ -132,9 +132,9 @@ passport.deserializeUser(function (id, cb) {
 const sessionStore = new MongoStore({ mongooseConnection: connection, collection: 'sessions', mongoUrl: process.env.SESSION_STORE })
 
 app.use(passport.initialize());
-app.use(passport.session()); 
+app.use(passport.session());
 
-app.use((req,res,next) =>{
+app.use((req, res, next) => {
     console.log(req.session);
     console.log(req.user);
     next();
@@ -172,7 +172,14 @@ app.get('/findLog', (req, res) => {
             console.log(logJSON);
 
             logArray.map(element => {
-                updatedLogArray.push({ logTitle: element.Title, logPlot: "test", logReleaseDate: element.Year, logPoster: element.Poster });
+                updatedLogArray.push({
+                    logTitle: element.Title,
+                    logPlot: "test",
+                    logReleaseDate: element.Year,
+                    logPoster: element.Poster,
+                    logID: element.imdbID,
+                    logType: element.Type
+                });
             })
             res.send(updatedLogArray);
 
@@ -183,6 +190,11 @@ app.get('/findLog', (req, res) => {
 
     request.end();
 });
+
+app.post("/addLog", (req, res) => {
+    console.log(req.body);
+    res.send(req.body);
+})
 
 app.post("/register", (req, res) => {
     const emailAddress = req.body.emailAddress
@@ -197,19 +209,19 @@ app.post("/register", (req, res) => {
 
     const newUser = new User({
         username: emailAddress,
-        hash : hash,
-        salt : salt
+        hash: hash,
+        salt: salt
     });
 
     //save new user into database with generated hash and salt
     newUser.save()
-        .then((user) =>{
+        .then((user) => {
             console.log(`${user} successfuly registerd`);
-            res.send({"registerStatus":true})
+            res.send({ "registerStatus": true })
         })
-        .catch((err) =>{
+        .catch((err) => {
             console.log(`error occured ${err}`);
-            res.send({"registerStatus":false})
+            res.send({ "registerStatus": false })
         })
 });
 // Since we are using the passport.authenticate() method, we should be redirected no matter what 
@@ -220,10 +232,10 @@ app.post('/login',
     }));
 
 app.get("/loginSuccess", (req, res) => {
-    res.send({"loginStatus":true})
+    res.send({ "loginStatus": true })
 })
 app.get("/loginFailure", (req, res) => {
-    res.send({"loginStatus":false})
+    res.send({ "loginStatus": false })
 });
 
 app.listen(port, () => {
