@@ -64,6 +64,14 @@ const UserSchema = new mongoose.Schema({
 
 const User = connection.model('User', UserSchema);
 
+const backLog = new mongoose.Schema({
+    userId: String,
+    logId: String,
+    logTitle: String,
+    logPoster: String
+});
+const BackLog = connection.model('BackLog', backLog);
+
 
 /**
  * This function is called when the `passport.authenticate()` method is called.
@@ -192,8 +200,29 @@ app.get('/findLog', (req, res) => {
 });
 
 app.post("/addLog", (req, res) => {
-    console.log(req.body);
-    res.send(req.body);
+
+    if(!req.user)
+        return;
+    const userInfo = req.user;
+    console.log(`test ${userInfo.username}`);
+    const newLog = {
+        userID: userInfo.id,
+        logId: req.body.logId,
+        logTitle: req.body.logTitle,
+        logPoster: req.body.logPoster
+    }
+
+    const newBackLog = new BackLog(newLog);
+    newBackLog.save()
+    .then((log) => {
+        console.log(`${log} successfuly added to backLog`);
+        //res.send({ "registerStatus": true })
+    })
+    .catch((err) => {
+        console.log(`error occured ${err}`);
+        //res.send({ "registerStatus": false })
+    })
+    //res.send(newLog);
 })
 
 app.post("/register", (req, res) => {
