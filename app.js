@@ -151,9 +151,23 @@ app.use((req, res, next) => {
 
 //home page
 app.get('/', (req, res) => {
-    console.log("Here is the api key" + process.env.OMDB_KEY);
-    res.sendFile(__dirname + '/index.html')
-    console.log("Here is the api key" + process.env.OMDB_KEY);
+    
+    if(!req.user){
+        res.send("user not logged in");
+        return;
+    }
+        const passportUserId = req.user.id;
+        BackLog.find({ userId: passportUserId })
+        .then((backLog) => {
+
+            if (!backLog) { return {} }
+            res.send(backLog);
+            return;
+        })
+        .catch((err) => {
+            res.send(`issue retrieving backlog ${err}`);
+            return;
+        });      
 });
 
 //When user tries to search for media, it is fowarded to this endpoint. 
@@ -201,12 +215,14 @@ app.get('/findLog', (req, res) => {
 
 app.post("/addLog", (req, res) => {
 
-    if(!req.user)
+    if(!req.user){
+        res.send({addLogStatus:false, MSG: "User not logged in"})
         return;
+    }
     const userInfo = req.user;
     console.log(`test ${userInfo.username}`);
     const newLog = {
-        userID: userInfo.id,
+        userId: userInfo.id,
         logId: req.body.logId,
         logTitle: req.body.logTitle,
         logPoster: req.body.logPoster
@@ -217,9 +233,13 @@ app.post("/addLog", (req, res) => {
     .then((log) => {
         console.log(`${log} successfuly added to backLog`);
         //res.send({ "registerStatus": true })
+        res.send({addLogStatus:true, MSG: `${log.logTitle} was added to the backLog`})
+        return;
+    
     })
     .catch((err) => {
         console.log(`error occured ${err}`);
+        res.send({addLogStatus:false, MSG: "Error adding title to backLog"});
         //res.send({ "registerStatus": false })
     })
     //res.send(newLog);
