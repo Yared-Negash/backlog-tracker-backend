@@ -273,17 +273,7 @@ app.post("/removeLog", (req, res) => {
     }
     console.log(`attempt to remove ${JSON.stringify(removeLog)}`);
 
-    const removeBackLog = new BackLog();
-    removeBackLog.deleteOne(removeLog, function (err) {
-    if(err)  res.send({removeLogStatus:false, MSG: `Error removing ${removeLog.logTitle} from the backLog`});
-      console.log("Successful deletion");
-      res.send({removeLogStatus:true, MSG: `${removeLog.logTitle} was removed from the backLog`})
-
-    });
-
-
-
-/*     removeBackLog.findOneAndDelete(removeLog)
+    BackLog.deleteOne(removeLog)
     .then((log) => {
         console.log(`${log} successfuly removed from backLog`);
         res.send({removeLogStatus:true, MSG: `${log.logTitle} was removed from the backLog`})
@@ -294,7 +284,7 @@ app.post("/removeLog", (req, res) => {
         console.log(`error occured ${err}`);
         res.send({removeLogStatus:false, MSG: `Error removing ${log.logTitle} from the backLog`});
         return;
-    }) */
+    })
 })
 
 app.post("/register", (req, res) => {
