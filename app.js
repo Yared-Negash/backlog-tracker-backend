@@ -302,7 +302,8 @@ app.get("/loginFailure", (req, res) => {
 
 app.get('/logout', function(req, res){
     req.logout();
-    res.send({isLoggedOut: true, msg: 'user logged out' });
+    req.session.destroy();
+    res.clearCookie('connect.sid').status(200).send({isLoggedOut: true, msg: 'user logged out' });
   });
 
 app.listen(port, () => {
