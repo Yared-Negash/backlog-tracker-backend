@@ -275,14 +275,14 @@ app.post("/removeLog", (req, res) => {
 
     BackLog.deleteOne(removeLog)
     .then((log) => {
-        console.log(`${log} successfuly removed from backLog`);
-        res.send({removeLogStatus:true, MSG: `${log.logTitle} was removed from the backLog`})
+        console.log(`${removeLog.logTitle} successfuly removed from backLog`);
+        res.send({removeLogStatus:true, MSG: `${removeLog.logTitle} was removed from the backLog`})
         return;
     
     })
     .catch((err) => {
         console.log(`error occured ${err}`);
-        res.send({removeLogStatus:false, MSG: `Error removing ${log.logTitle} from the backLog`});
+        res.send({removeLogStatus:false, MSG: `Error removing ${removeLog.logTitle} from the backLog`});
         return;
     })
 })
