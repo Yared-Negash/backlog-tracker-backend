@@ -170,6 +170,19 @@ app.get('/', (req, res) => {
         });      
 });
 
+//check if user is authenticated
+app.get('/isAuth', (req, res) => {
+    
+    if(!req.user){
+        res.send({isAuth:false, msg: 'user not logged in'});
+        return;
+    }
+
+    res.send({isAuth:true, msg: 'user is logged in'});
+    return;
+
+});
+
 //When user tries to search for media, it is fowarded to this endpoint. 
 app.get('/findLog', (req, res) => {
     const logTitle = req.query.searchedLog;
@@ -286,6 +299,11 @@ app.get("/loginSuccess", (req, res) => {
 app.get("/loginFailure", (req, res) => {
     res.send({ "loginStatus": false })
 });
+
+app.get('/logout', function(req, res){
+    req.logout();
+    res.send({isLoggedOut: true, msg: 'user logged out' });
+  });
 
 app.listen(port, () => {
     if (origin.includes("localhost"))
