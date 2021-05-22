@@ -258,6 +258,45 @@ app.post("/addLog", (req, res) => {
     //res.send(newLog);
 })
 
+app.post("/removeLog", (req, res) => {
+
+    if(!req.user){
+        res.send({addLogStatus:false, MSG: "User not logged in"})
+        return;
+    }
+    const userInfo = req.user;
+    const removeLog = {
+        userId: userInfo.id,
+        logId: req.body.logId,
+        logTitle: req.body.logTitle,
+        logPoster: req.body.logPoster
+    }
+    console.log(`attempt to remove ${JSON.stringify(removeLog)}`);
+
+    const removeBackLog = new BackLog();
+    removeBackLog.deleteOne(removeLog, function (err) {
+    if(err)  res.send({removeLogStatus:false, MSG: `Error removing ${removeLog.logTitle} from the backLog`});
+      console.log("Successful deletion");
+      res.send({removeLogStatus:true, MSG: `${removeLog.logTitle} was removed from the backLog`})
+
+    });
+
+
+
+/*     removeBackLog.findOneAndDelete(removeLog)
+    .then((log) => {
+        console.log(`${log} successfuly removed from backLog`);
+        res.send({removeLogStatus:true, MSG: `${log.logTitle} was removed from the backLog`})
+        return;
+    
+    })
+    .catch((err) => {
+        console.log(`error occured ${err}`);
+        res.send({removeLogStatus:false, MSG: `Error removing ${log.logTitle} from the backLog`});
+        return;
+    }) */
+})
+
 app.post("/register", (req, res) => {
     const emailAddress = req.body.emailAddress
     const userPassword = req.body.userPassword;
