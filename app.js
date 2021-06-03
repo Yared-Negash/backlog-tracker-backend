@@ -209,7 +209,6 @@ app.get('/findLog', (req, res) => {
             logArray.map(element => {
                 updatedLogArray.push({
                     logTitle: element.Title,
-                    logPlot: "test",
                     logReleaseDate: element.Year,
                     logPoster: element.Poster,
                     logID: element.imdbID,

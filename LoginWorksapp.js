@@ -235,7 +235,7 @@ app.get('/findLog', (req, res) => {
             console.log(logJSON);
 
             logArray.map(element => {
-                updatedLogArray.push({ logTitle: element.Title, logPlot: "test", logReleaseDate: element.Year, logPoster: element.Poster });
+                updatedLogArray.push({ logTitle: element.Title, logReleaseDate: element.Year, logPoster: element.Poster });
             })
             res.send(updatedLogArray);
 
