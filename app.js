@@ -26,7 +26,7 @@ console.log(`cors origin (Front-end): ${origin}`);
 console.log(`OMDB URL: ${baseOMDBLink}`);
 
 //configures session data
-app.use(session({
+const sessionConfig = {
     secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
@@ -34,7 +34,17 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 24
     },
     store: MongoStore.create({ mongoUrl: process.env.SESSION_STORE })
-}))
+};
+
+//If on production, make sure cookie object has secure and samesite to allow session data to be sent from backend to front end
+//They're on different domains, so without it, it will conflict cross site origin
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1) // trust first proxy
+    sessionConfig.cookie.secure = true; // serve secure cookies
+    sessionConfig.cookie.sameSite = 'none';
+}
+
+app.use(session(sessionConfig));
 /**
  * Connect to MongoDB Server using the connection string in the `.env` file.  To implement this, place the following
  * string into the `.env` file
