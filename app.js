@@ -56,7 +56,8 @@ const conn = process.env.DB_STRING;
 
 const connection = mongoose.createConnection(conn, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useCreateIndex: true
 });
 
 
@@ -75,11 +76,18 @@ const UserSchema = new mongoose.Schema({
 const User = connection.model('User', UserSchema);
 
 const backLog = new mongoose.Schema({
-    userId: String,
-    logId: String,
+    userId: {
+        type: String,
+        required: true
+    },
+    logId: {
+        type: String,
+        required: true
+    },
     logTitle: String,
     logPoster: String
 });
+backLog.index({userId: 1, logId: 1}, {unique:true});
 const BackLog = connection.model('BackLog', backLog);
 
 
@@ -161,13 +169,13 @@ app.use((req, res, next) => {
 
 //home page
 app.get('/', (req, res) => {
-    
+
     if(!req.user){
         res.send("user not logged in");
         return;
     }
-        const passportUserId = req.user.id;
-        BackLog.find({ userId: passportUserId })
+    const passportUserId = req.user.id;
+    BackLog.find({ userId: passportUserId })
         .then((backLog) => {
 
             if (!backLog) { return {} }
@@ -177,12 +185,12 @@ app.get('/', (req, res) => {
         .catch((err) => {
             res.send(`issue retrieving backlog ${err}`);
             return;
-        });      
+        });
 });
 
 //check if user is authenticated
 app.get('/isAuth', (req, res) => {
-    
+
     if(!req.user){
         res.send({isAuth:false, msg: 'user not logged in'});
         return;
@@ -242,7 +250,7 @@ app.post("/addLog", (req, res) => {
         return;
     }
     const userInfo = req.user;
-    console.log(`test ${userInfo.username}`);
+    console.log(`adding log for ${userInfo.username}`);
     const newLog = {
         userId: userInfo.id,
         logId: req.body.logId,
@@ -252,19 +260,20 @@ app.post("/addLog", (req, res) => {
 
     const newBackLog = new BackLog(newLog);
     newBackLog.save()
-    .then((log) => {
-        console.log(`${log} successfuly added to backLog`);
-        //res.send({ "registerStatus": true })
-        res.send({addLogStatus:true, MSG: `${log.logTitle} was added to the backLog`})
-        return;
-    
-    })
-    .catch((err) => {
-        console.log(`error occured ${err}`);
-        res.send({addLogStatus:false, MSG: "Error adding title to backLog"});
-        //res.send({ "registerStatus": false })
-    })
-    //res.send(newLog);
+        .then((log) => {
+            console.log(`${log} successfuly added to backLog`);
+            res.send({ addLogStatus: true, MSG: `${log.logTitle} was added to the backLog` })
+            return;
+        })
+        .catch((err) => {
+            console.log(`error occured while adding log: ${err}`);
+            let errorMSG = 'Error adding title to backLog';
+            if((err.name === 'MongoError' && err.code == 11000)){
+                errorMSG = 'Duplicate logs not allowed';
+            }
+            res.send({ addLogStatus: false, MSG: errorMSG });
+            return;
+        })
 })
 
 app.post("/removeLog", (req, res) => {
