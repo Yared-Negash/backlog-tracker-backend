@@ -67,7 +67,11 @@ connection.on('connecting', () => {
 
 // Creates simple schema for a User.  The hash and salt are derived from the user's given password when they register
 const UserSchema = new mongoose.Schema({
-    username: String,
+    username: {
+        type: String,
+        required: true,
+        unique: true
+    },
     hash: String,
     salt: String
 });
@@ -329,8 +333,13 @@ app.post("/register", (req, res) => {
             res.send({ "registerStatus": true })
         })
         .catch((err) => {
-            console.log(`error occured ${err}`);
-            res.send({ "registerStatus": false })
+            console.log(`error registering ${emailAddress}: ${err}`);
+            let errorMSG = 'Error registering user';
+            if((err.name === 'MongoError' && err.code == 11000)){
+                errorMSG = 'Email already exists';
+            }
+            res.send({ registerStatus: false, MSG: errorMSG });
+            return;
         })
 });
 // Since we are using the passport.authenticate() method, we should be redirected no matter what 
