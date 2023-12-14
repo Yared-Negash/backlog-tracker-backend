@@ -361,10 +361,11 @@ app.get('/logout', function(req, res){
     req.session.destroy();
     res.clearCookie('connect.sid').status(200).send({isLoggedOut: true, msg: 'user logged out' });
   });
-
-app.listen(port, () => {
+  
+var server = https.createServer(app);
+server.listen(port, () => {
     if (origin.includes("localhost"))
         console.log(`Lumberjacks are awaiting your orders at http://localhost:${port}`)
     else
         console.log(`Lumberjacks are awaiting your order on port ${port} (prod)`);
-})
+  })
