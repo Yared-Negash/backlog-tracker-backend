@@ -166,3 +166,5 @@ About
 .eslintcache
 
 *.ps1
+sslcert/server.crt
+sslcert/server.key
