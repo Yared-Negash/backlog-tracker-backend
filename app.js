@@ -1,4 +1,5 @@
 require('dotenv').config();
+var fs = require('fs');
 const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
@@ -11,6 +12,9 @@ const LocalStrategy = require('passport-local').Strategy;
 const passwordUtils = require('./utility/passwordUtil');
 const genPassword = passwordUtils.genPassword;
 const MongoStore = require('connect-mongo');
+var privateKey  = fs.readFileSync('sslcert/server.key', 'utf8');
+var certificate = fs.readFileSync('sslcert/server.crt', 'utf8');
+var credentials = {key: privateKey, cert: certificate};
 
 const app = express();
 const origin = process.env.ORIGIN || 'http://localhost:3001'
@@ -361,10 +365,11 @@ app.get('/logout', function(req, res){
     req.session.destroy();
     res.clearCookie('connect.sid').status(200).send({isLoggedOut: true, msg: 'user logged out' });
   });
-
-app.listen(port, () => {
+  
+var server = https.createServer(credentials, app);
+server.listen(port, () => {
     if (origin.includes("localhost"))
         console.log(`Lumberjacks are awaiting your orders at http://localhost:${port}`)
     else
         console.log(`Lumberjacks are awaiting your order on port ${port} (prod)`);
-})
+  })
